@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: money-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: money_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - money-data:/var/lib/postgresql
+    restart: unless-stopped
+    networks:
+      - money-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: money-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@localhost.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    networks:
+      - money-network
+    depends_on:
+      - postgres
+
+volumes:
+  money-data:
+  pgadmin-data:
+
+networks:
+  money-network:
+    driver: bridge
