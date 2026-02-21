@@ -1,112 +1,181 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useState } from 'react';
+import axios from 'axios';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+const CATEGORIES = ['Food', 'Rent', 'Travel', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other'];
+const TYPES = ['expense', 'split', 'loan'];
+const API = 'http://192.168.1.9:8000';
 
-export default function TabTwoScreen() {
+export default function AddExpenseScreen() {
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('Food');
+  const [type, setType] = useState('expense');
+  const [paidBy, setPaidBy] = useState('');
+  const [splitWith, setSplitWith] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async () => {
+    try {
+      const body = {
+        amount: parseFloat(amount),
+        description,
+        category,
+        type,
+        paid_by: paidBy || null,
+        split_with: splitWith ? splitWith.split(',').map(s => s.trim()) : null,
+        transaction_date: new Date().toISOString().split('T')[0],
+      };
+      await axios.post(`${API}/transactions/`, body);
+      setMessage('Expense added!');
+      setAmount('');
+      setDescription('');
+      setSplitWith('');
+    } catch (err) {
+      setMessage('Something went wrong');
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <ScrollView style={styles.container}>
+      <Text style={styles.header}>Add Expense</Text>
+
+      <Text style={styles.label}>Amount (₹)</Text>
+      <TextInput
+        style={styles.input}
+        keyboardType='numeric'
+        value={amount}
+        onChangeText={setAmount}
+        placeholder='0'
+        placeholderTextColor='#444'
+      />
+
+      <Text style={styles.label}>Description</Text>
+      <TextInput
+        style={styles.input}
+        value={description}
+        onChangeText={setDescription}
+        placeholder='Dinner, rent...'
+        placeholderTextColor='#444'
+      />
+
+      <Text style={styles.label}>Category</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+        {CATEGORIES.map(cat => (
+          <TouchableOpacity
+            key={cat}
+            style={[styles.chip, category === cat && styles.chipActive]}
+            onPress={() => setCategory(cat)}>
+            <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>{cat}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <Text style={styles.label}>Type</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+        {TYPES.map(t => (
+          <TouchableOpacity
+            key={t}
+            style={[styles.chip, type === t && styles.chipActive]}
+            onPress={() => setType(t)}>
+            <Text style={[styles.chipText, type === t && styles.chipTextActive]}>{t}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {(type === 'split' || type === 'loan') && (
+        <>
+          <Text style={styles.label}>Paid By</Text>
+          <TextInput
+            style={styles.input}
+            value={paidBy}
+            onChangeText={setPaidBy}
+            placeholder='Lavish'
+            placeholderTextColor='#444'
+          />
+          <Text style={styles.label}>Split With (comma separated)</Text>
+          <TextInput
+            style={styles.input}
+            value={splitWith}
+            onChangeText={setSplitWith}
+            placeholder='Shubham, Nipun'
+            placeholderTextColor='#444'
+          />
+        </>
+      )}
+
+      {message ? <Text style={styles.message}>{message}</Text> : null}
+
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>Add Expense</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+    padding: 20,
+    paddingTop: 60,
   },
-  titleContainer: {
+  header: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 14,
+    color: '#888888',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  input: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 16,
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  chipRow: {
     flexDirection: 'row',
-    gap: 8,
+    marginBottom: 8,
+  },
+  chip: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  chipActive: {
+    backgroundColor: '#6366f1',
+  },
+  chipText: {
+    color: '#888888',
+    fontSize: 14,
+  },
+  chipTextActive: {
+    color: '#ffffff',
+  },
+  button: {
+    backgroundColor: '#6366f1',
+    borderRadius: 12,
+    padding: 18,
+    alignItems: 'center',
+    marginTop: 32,
+    marginBottom: 40,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  message: {
+    color: '#4ade80',
+    marginTop: 12,
+    textAlign: 'center',
   },
 });

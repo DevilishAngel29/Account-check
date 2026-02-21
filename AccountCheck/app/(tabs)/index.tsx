@@ -6,7 +6,7 @@ export default function HomeScreen() {
   const [summary, setSummary] = useState({
     total_spent: 0,
     owed_to_me: 0,
-    i_owe: 0,
+    i_owe: 100,
   });
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, Text, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from app.database import Base
 from sqlalchemy.orm import relationship
@@ -24,7 +24,7 @@ class Split(Base):
     paid_by = Column(String(50), nullable=False)
     split_with = Column(String(50), nullable=False)
     amount = Column(Float, nullable=False)
-    is_settled = Column(Integer, default=0)  # 0 for unsettled, 1 for settled
+    is_settled = Column(Boolean, default=False)  # 0 for unsettled, 1 for settled
     settled_at = Column(DateTime(timezone=True), nullable=True)
 
     transaction = relationship("Transaction",back_populates="splits")
