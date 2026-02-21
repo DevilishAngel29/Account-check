@@ -62,7 +62,7 @@ def get_summary(db: Session):
     by_category = {}
 
     for t in transactions:
-        if t.type == "expense":
+        if t.type == "expense" or t.type == "split":
             total_spent += t.amount
             by_category[t.category] = by_category.get(t.category, 0) + t.amount
         
