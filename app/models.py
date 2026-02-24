@@ -3,6 +3,16 @@ from sqlalchemy.sql import func
 from app.database import Base
 from sqlalchemy.orm import relationship
 
+class Account(Base):
+    __tablename__ = "accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    type = Column(String(20), nullable=False) 
+    balance = Column(Float, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    transactions = relationship("Transaction", back_populates="account")
+
 class Transaction(Base):
     __tablename__ = "transactions"
 
@@ -11,22 +21,24 @@ class Transaction(Base):
     your_share = Column(Float, nullable=True)  # actual amount you spent
     description = Column(Text, nullable=True)
     category = Column(String(50), nullable=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
     type = Column(String(20), nullable = False)
+    is_split = Column(Boolean, default=False)
     transaction_date = Column(Date, default=func.current_date())
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     splits = relationship("Split",back_populates = "transaction")
+    account = relationship("Account", back_populates="transactions")
 
 class Split(Base):
     __tablename__ = "splits"
 
     id = Column(Integer, primary_key=True, index=True)
     transaction_id = Column(Integer, ForeignKey("transactions.id"))
-    paid_by = Column(String(50), nullable=False)
+    paid_by_me = Column(Boolean, default=True)
     split_with = Column(String(50), nullable=False)
     amount = Column(Float, nullable=False)
-    is_settled = Column(Boolean, default=False)  # 0 for unsettled, 1 for settled
-    settled_at = Column(DateTime(timezone=True), nullable=True)
-
+    amount_paid = Column(Float, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     transaction = relationship("Transaction",back_populates="splits")
 
 

@@ -1,21 +1,20 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-
-const API = 'http://192.168.1.9:8000';
+import { API_BASE } from '@/constants/api';
 
 export default function SplitsScreen() {
     const [transactions, setTransactions] = useState([]);
 
       useEffect(() => {
-        axios.get('http://192.168.1.9:8000/transactions')
+        axios.get(`${API_BASE}/transactions`)
           .then(res => setTransactions(res.data.filter(t => t.type === 'split' || t.type === 'loan')))
           .catch(err => console.log(err));
       }, []);
 
       const settleSplit = async (splitId) => {
-        await axios.put(`${API}/splits/${splitId}/settle`);
-        const res = await axios.get(`${API}/transactions/`);
+        await axios.put(`${API_BASE}/splits/${splitId}/settle`);
+        const res = await axios.get(`${API_BASE}/transactions/`);
         setTransactions(res.data.filter(t => t.type === 'split' || t.type === 'loan'));
         };
 

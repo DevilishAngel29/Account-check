@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useState } from 'react';
 import axios from 'axios';
+import { API_BASE } from '@/constants/api';
 
 const CATEGORIES = ['Food', 'Rent', 'Travel', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other'];
 const TYPES = ['expense', 'split', 'loan'];
-const API = 'http://192.168.1.9:8000';
+
 
 export default function AddExpenseScreen() {
   const [amount, setAmount] = useState('');
@@ -26,7 +27,7 @@ export default function AddExpenseScreen() {
         split_with: splitWith ? splitWith.split(',').map(s => s.trim()) : null,
         transaction_date: new Date().toISOString().split('T')[0],
       };
-      await axios.post(`${API}/transactions/`, body);
+      await axios.post(`${API_BASE}/transactions/`, body);
       setMessage('Expense added!');
       setAmount('');
       setDescription('');

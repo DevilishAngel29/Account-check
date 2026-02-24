@@ -30,12 +30,17 @@ def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Transaction not found")
     return db_transaction
 
-@app.put("/splits/{split_id}/settle")
-def settle_split(split_id: int, db: Session = Depends(get_db)):
-    split = crud.settle_split(db, split_id=split_id)
-    if split is None:
-        raise HTTPException(status_code=404, detail="Split not found")
-    return split
+@app.get("/people/")
+def get_people_balances(db: Session = Depends(get_db)):
+    return crud.get_people_balances(db)
+
+@app.post("/accounts/", response_model=schemas.Account)
+def create_account(account: schemas.AccountCreate, db: Session = Depends(get_db)):
+    return crud.create_account(db=db, account=account)
+
+@app.get("/accounts/", response_model=List[schemas.Account])
+def get_accounts(db: Session = Depends(get_db)):
+    return crud.get_accounts(db)
 
 @app.get("/summary")
 def get_summary(db: Session = Depends(get_db)):
