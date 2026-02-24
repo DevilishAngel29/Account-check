@@ -4,7 +4,7 @@ import axios from 'axios';
 import { API_BASE } from '@/constants/api';
 
 const CATEGORIES = ['Food', 'Rent', 'Travel', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other'];
-const TYPES = ['expense', 'split', 'loan'];
+const TYPES = ['expense', 'income'];
 
 
 export default function AddExpenseScreen() {
@@ -12,30 +12,54 @@ export default function AddExpenseScreen() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Food');
   const [type, setType] = useState('expense');
-  const [paidBy, setPaidBy] = useState('');
-  const [splitWith, setSplitWith] = useState('');
+  const [splitPeople, setSplitPeople] = useState([
+    { name: '', amount: '' }  // start with one empty row
+]);
   const [message, setMessage] = useState('');
+  const [isSplit, setIsSplit] = useState(false);
 
-  const handleSubmit = async () => {
-    try {
-      const body = {
-        amount: parseFloat(amount),
-        description,
-        category,
-        type,
-        paid_by: paidBy || null,
-        split_with: splitWith ? splitWith.split(',').map(s => s.trim()) : null,
-        transaction_date: new Date().toISOString().split('T')[0],
-      };
-      await axios.post(`${API_BASE}/transactions/`, body);
-      setMessage('Expense added!');
-      setAmount('');
-      setDescription('');
-      setSplitWith('');
-    } catch (err) {
-      setMessage('Something went wrong');
-    }
-  };
+  
+
+ const handleSubmit = async () => {
+  try {
+        const body = {
+  amount: parseFloat(amount),
+  description,
+  category,
+  type,
+  account_id: 1,
+  is_split: isSplit,
+  your_share: null,  // add this — backend calculates if null
+  paid_by_me: true, 
+  transaction_date: new Date().toISOString().split('T')[0],
+  split_with: isSplit ? splitPeople
+    .filter(p => p.name.trim() !== '')
+    .map(p => p.amount 
+      ? { name: p.name.trim(), amount: parseFloat(p.amount) }
+      : p.name.trim()
+    ) : null,
+};
+    await axios.post(`${API_BASE}/transactions/`, body);
+    setMessage('Expense added!');
+    setAmount('');
+    setDescription('');
+  } catch (err) {
+    setMessage('Something went wrong');
+  }
+};
+const addPerson = () => {
+  setSplitPeople([...splitPeople, { name: '', amount: '' }]);
+};
+
+const updatePerson = (index, field, value) => {
+  const updated = [...splitPeople];
+  updated[index][field] = value;
+  setSplitPeople(updated);
+};
+
+const removePerson = (index) => {
+  setSplitPeople(splitPeople.filter((_, i) => i !== index));
+};
 
   return (
     <ScrollView style={styles.container}>
@@ -59,6 +83,8 @@ export default function AddExpenseScreen() {
         placeholder='Dinner, rent...'
         placeholderTextColor='#444'
       />
+
+      
 
       <Text style={styles.label}>Category</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
@@ -84,32 +110,70 @@ export default function AddExpenseScreen() {
         ))}
       </ScrollView>
 
-      {(type === 'split' || type === 'loan') && (
-        <>
-          <Text style={styles.label}>Paid By</Text>
+
+
+      {/* Split Toggle */}
+<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+  <Text style={styles.label}>Split this expense?</Text>
+
+  <TouchableOpacity 
+  onPress={() => setIsSplit(!isSplit)}
+  style={{
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#6366f1',
+    backgroundColor: isSplit ? '#6366f1' : 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}>
+  {isSplit && <Text style={{ color: '#fff', fontSize: 14 }}>✓</Text>}
+</TouchableOpacity>
+</View>
+
+{/* Only show when isSplit is true */}
+{isSplit && (
+  <>
+    <Text style={styles.label}>Split With</Text>
+      <Text style={{ color: '#555', fontSize: 12, marginBottom: 4}}>
+        (Leave amount blank for equal split)
+      </Text>
+      {splitPeople.map((person, index) => (
+        <View key={index} style={{ flexDirection: 'row', marginBottom: 8 }}>
           <TextInput
-            style={styles.input}
-            value={paidBy}
-            onChangeText={setPaidBy}
-            placeholder='Lavish'
+            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            value={person.name}
+            onChangeText={(value) => updatePerson(index, 'name', value)}
+            placeholder='Name'
             placeholderTextColor='#444'
           />
-          <Text style={styles.label}>Split With (comma separated)</Text>
           <TextInput
-            style={styles.input}
-            value={splitWith}
-            onChangeText={setSplitWith}
-            placeholder='Shubham, Nipun'
+            style={[styles.input, { flex: 1 }]}
+            keyboardType='numeric'
+            value={person.amount}
+            onChangeText={(value) => updatePerson(index, 'amount', value)}
+            placeholder='Amount'
             placeholderTextColor='#444'
           />
-        </>
-      )}
+          <TouchableOpacity onPress={() => removePerson(index)} style={{ padding: 12 }}>
+            <Text style={{ color: '#ff0000' }}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+    ))}
+    <TouchableOpacity onPress={addPerson}>
+      <Text style={{ color: '#6366f1' }}>+ Add Person</Text>
+    </TouchableOpacity>
+  </>
+)}
+
 
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>Add Expense</Text>
       </TouchableOpacity>
+      <View style={{ height: 50 }} />
     </ScrollView>
   );
 }

@@ -34,6 +34,10 @@ def read_transaction(transaction_id: int, db: Session = Depends(get_db)):
 def get_people_balances(db: Session = Depends(get_db)):
     return crud.get_people_balances(db)
 
+@app.get("/people/{name}")
+def get_person_splits(name: str, db: Session = Depends(get_db)):
+    return crud.get_person_splits(db, name=name)
+
 @app.post("/accounts/", response_model=schemas.Account)
 def create_account(account: schemas.AccountCreate, db: Session = Depends(get_db)):
     return crud.create_account(db=db, account=account)
@@ -41,6 +45,8 @@ def create_account(account: schemas.AccountCreate, db: Session = Depends(get_db)
 @app.get("/accounts/", response_model=List[schemas.Account])
 def get_accounts(db: Session = Depends(get_db)):
     return crud.get_accounts(db)
+
+
 
 @app.get("/summary")
 def get_summary(db: Session = Depends(get_db)):

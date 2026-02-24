@@ -1,65 +1,65 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API_BASE } from '@/constants/api';
+import { API_BASE } from '../../constants/api';
+import { router } from 'expo-router';
 
 export default function SplitsScreen() {
-    const [transactions, setTransactions] = useState([]);
+  const [people, setPeople] = useState([]);
 
-      useEffect(() => {
-        axios.get(`${API_BASE}/transactions`)
-          .then(res => setTransactions(res.data.filter(t => t.type === 'split' || t.type === 'loan')))
-          .catch(err => console.log(err));
-      }, []);
+  useEffect(() => {
+    axios.get(`${API_BASE}/people/`)
+      .then(res => setPeople(res.data))
+      .catch(err => console.log(err));
+  }, []);
 
-      const settleSplit = async (splitId) => {
-        await axios.put(`${API_BASE}/splits/${splitId}/settle`);
-        const res = await axios.get(`${API_BASE}/transactions/`);
-        setTransactions(res.data.filter(t => t.type === 'split' || t.type === 'loan'));
-        };
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.header}>Splits</Text>
 
-return (
-       <ScrollView style={styles.container}>
-          <Text style={styles.header}>Splits</Text>
-    
-          
-            {
-            transactions.map(t => (
-              <TouchableOpacity
-                key={t.id}>
-                <View style={styles.card}>
-                    <Text style={styles.description}>{t.description}</Text>
-                    <Text style={styles.amount}>₹{t.amount}</Text>
-                    <Text style={styles.category}>{t.category} • {t.transaction_date}</Text>
-                    
-                    {t.splits.map(split => (
-                        <View key={split.id} style={styles.splitRow}>
-                            <Text style={styles.splitText}>
-                               {split.paid_by} → {split.split_with}: ₹{split.amount.toFixed(0)}
-                            </Text>
-                            {!split.is_settled ?(
-                                <TouchableOpacity 
-                                style = {styles.settleButton}
-                                onPress={() => {settleSplit(split.id)}}>
-                                    <Text style = {styles.settleText}>Settle</Text>
-                                </TouchableOpacity>
-                            ) : (
-                                <Text style={styles.settled}>✓ Settled</Text> 
-                            )}
-                        </View>
-                    ))}
-                </View>
-              </TouchableOpacity>
-        
-            ))}
-        </ScrollView>
-    );
+      {people.length === 0 ? (
+        <Text style={{ color: '#555', textAlign: 'center', marginTop: 40 }}>
+          No splits yet
+        </Text>
+      ) : (
+        people.map(person => (
+          <TouchableOpacity key={person.name} style={styles.card} onPress={()=> router.push(`/person/${person.name}`)}>
+            {/* Avatar circle with first letter */}
+            <View style={styles.row}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {person.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+
+              <View style={styles.info}>
+                <Text style={styles.name}>{person.name}</Text>
+                <Text style={[
+                  styles.status,
+                  person.they_owe_me ? styles.green : styles.red
+                ]}>
+                  {person.they_owe_me ? 'owes you' : 'you owe'}
+                </Text>
+              </View>
+
+              <Text style={[
+                styles.amount,
+                person.they_owe_me ? styles.green : styles.red
+              ]}>
+                ₹{person.balance}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0d0d0f',
     padding: 20,
     paddingTop: 60,
   },
@@ -72,53 +72,47 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#1a1a1a',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  description: {
-    fontSize: 16,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  amount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginTop: 4,
-  },
-  category: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 4,
+    padding: 16,
     marginBottom: 12,
   },
-  splitRow: {
+  row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#2a2a2a',
   },
-  splitText: {
-    color: '#cccccc',
-    fontSize: 14,
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#8B31C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  settleButton: {
-    backgroundColor: '#4ade80',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  settleText: {
-    color: '#000000',
+  avatarText: {
+    color: '#fff',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: 18,
   },
-  settled: {
+  info: {
+    flex: 1,
+  },
+  name: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  status: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  amount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  green: {
     color: '#4ade80',
-    fontSize: 14,
+  },
+  red: {
+    color: '#f87171',
   },
 });
-
-  

@@ -5,6 +5,7 @@ import { API_BASE } from '@/constants/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ScrollView } from 'react-native';
 
+
 export default function HomeScreen() {
   const [summary, setSummary] = useState({
     total_spent: 0,
@@ -20,7 +21,7 @@ export default function HomeScreen() {
         console.log('API response:', res.data);
         setSummary(res.data);
       })
-      .catch(err => console.log(err));
+      .catch(err =>console.log('Error:', err));
 
     axios.get(`${API_BASE}/transactions/`)
       .then(res => setTransactions(res.data))

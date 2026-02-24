@@ -130,3 +130,28 @@ def get_summary(db:Session):
         "spending_by_category": by_category
     }
 
+def get_person_splits(db: Session, name: str):
+    splits = db.query(models.Split).filter(
+        models.Split.split_with == name
+    ).all()
+    
+    result = []
+    for split in splits:
+        transaction = db.query(models.Transaction).filter(
+            models.Transaction.id == split.transaction_id
+        ).first()
+        
+        result.append({
+            "id": split.id,
+            "amount": split.amount,
+            "amount_paid": split.amount_paid,
+            "paid_by_me": split.paid_by_me,
+            "remaining": split.amount - split.amount_paid,
+            "description": transaction.description,
+            "category": transaction.category,
+            "date": str(transaction.transaction_date),
+        })
+    
+    return result
+
+
