@@ -6,8 +6,19 @@ from typing import List, Optional
 def get_transaction(db: Session, transaction_id: int):
     return db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
 
-def get_transactions(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Transaction).offset(skip).limit(limit).all()
+def get_transactions(db: Session, skip: int = 0, limit: int = 100, month: int = None, year: int = None):
+    query = db.query(models.Transaction)
+    
+    if month and year:
+        from sqlalchemy import extract
+        query = query.filter(
+            extract('month', models.Transaction.transaction_date) == month,
+            extract('year', models.Transaction.transaction_date) == year
+        )
+    
+    return query.order_by(
+        models.Transaction.created_at.desc()
+    ).offset(skip).limit(limit).all()
 
 def create_transaction(db: Session, transaction: schemas.TransactionCreate):
     
@@ -26,7 +37,6 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
         category=transaction.category,
         type=transaction.type,
         is_split=transaction.is_split,
-        account_id=transaction.account_id,
         transaction_date=transaction.transaction_date
     )
     db.add(db_transaction)
@@ -53,23 +63,12 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
         db.commit()
         db.refresh(db_transaction)
 
+
     return db_transaction
 
 
 
-def create_account(db: Session, account: schemas.AccountCreate):
-    db_account = models.Account(
-        name=account.name,
-        type=account.type,
-        balance=account.balance
-    )
-    db.add(db_account)
-    db.commit()
-    db.refresh(db_account)
-    return db_account
 
-def get_accounts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Account).offset(skip).limit(limit).all()
     
 def get_people_balances(db: Session):
     splits = db.query(models.Split).all()
@@ -95,8 +94,18 @@ def get_people_balances(db: Session):
     for name, balance in balances.items()
 ]
 
-def get_summary(db:Session):
-    transactions = db.query(models.Transaction).all()
+def get_summary(db: Session, month: int = None, year: int = None):
+    transactions = db.query(models.Transaction)
+    
+    if month and year:
+        from sqlalchemy import extract
+        transactions = transactions.filter(
+            extract('month', models.Transaction.transaction_date) == month,
+            extract('year', models.Transaction.transaction_date) == year
+        )
+    
+    transactions = transactions.all()
+
     total_spent = 0
     total_income = 0
     owed_to_me = 0

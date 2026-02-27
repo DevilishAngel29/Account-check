@@ -28,7 +28,6 @@ class TransactionBase(BaseModel):
     category: str
     type: str # income or expense
     is_split: bool = False
-    account_id: int 
     transaction_date: Optional[date] = None
 
 
@@ -46,16 +45,4 @@ class Transaction(TransactionBase):
     class Config:
         from_attributes = True
 
-class AccountBase(BaseModel):
-    name: str
-    type: str
-    balance: float
 
-class AccountCreate(AccountBase):
-    pass
-
-class Account(AccountBase):
-    id: int
-    created_at: datetime
-    class Config:
-        from_attributes = True

@@ -1,10 +1,13 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE } from '@/constants/api';
-
+import { Picker } from '@react-native-picker/picker';
 const CATEGORIES = ['Food', 'Rent', 'Travel', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other'];
 const TYPES = ['expense', 'income'];
+import { Modal } from 'react-native';
+
+
 
 
 export default function AddExpenseScreen() {
@@ -17,6 +20,8 @@ export default function AddExpenseScreen() {
 ]);
   const [message, setMessage] = useState('');
   const [isSplit, setIsSplit] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
 
   
 
@@ -27,7 +32,6 @@ export default function AddExpenseScreen() {
   description,
   category,
   type,
-  account_id: 1,
   is_split: isSplit,
   your_share: null,  // add this — backend calculates if null
   paid_by_me: true, 
@@ -63,7 +67,7 @@ const removePerson = (index) => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Add Expense</Text>
+      <Text style={styles.header}>Add Transaction</Text>
 
       <Text style={styles.label}>Amount (₹)</Text>
       <TextInput
@@ -74,6 +78,7 @@ const removePerson = (index) => {
         placeholder='0'
         placeholderTextColor='#444'
       />
+
 
       <Text style={styles.label}>Description</Text>
       <TextInput
@@ -171,7 +176,9 @@ const removePerson = (index) => {
       {message ? <Text style={styles.message}>{message}</Text> : null}
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Add Expense</Text>
+        <Text style={styles.buttonText}>
+          {type === 'income' ? 'Add Income' : 'Add Expense'}
+      </Text>
       </TouchableOpacity>
       <View style={{ height: 50 }} />
     </ScrollView>
@@ -243,4 +250,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
+  pickerContainer: {
+  backgroundColor: '#1a1a1a',
+  borderRadius: 12,
+  marginBottom: 8,
+},
 });
