@@ -6,6 +6,7 @@ import { Picker } from '@react-native-picker/picker';
 const CATEGORIES = ['Food', 'Rent', 'Travel', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other'];
 const TYPES = ['expense', 'income'];
 import { Modal } from 'react-native';
+import { useCustomCategories } from '@/hooks/useCustomCategories';
 
 
 
@@ -21,7 +22,7 @@ export default function AddExpenseScreen() {
   const [message, setMessage] = useState('');
   const [isSplit, setIsSplit] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
-
+  const { customCategories, addCustomCategory } = useCustomCategories();
 
   
 

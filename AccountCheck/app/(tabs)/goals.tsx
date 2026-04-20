@@ -4,6 +4,8 @@ import axios from 'axios';
 import { View, Text, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { API_BASE } from '../../constants/api';
 import { CATEGORY_META } from '../../constants/categories';
+import { useCustomCategories } from '@/hooks/useCustomCategories';
+
 
 export default function GoalsScreen() {
 
@@ -22,6 +24,9 @@ export default function GoalsScreen() {
   const [overallModalVisible, setOverallModalVisible] = useState(false);
   const [overallInput, setOverallInput] = useState('');
 
+  const { customCategories, addCustomCategory } = useCustomCategories();
+ const [customCategoryInput, setCustomCategoryInput] = useState('');
+
   const handleSaveOverallGoal = async (amount: string) => {
   if (!amount) return;
   try {
@@ -32,29 +37,38 @@ export default function GoalsScreen() {
   }
 };
 
-  const handleSave = async () => {
-    if (!category) {
-      Alert.alert('Oops', 'Please select a category');
-      return;
-    }
-    if (!goal) {
-      Alert.alert('Oops', 'Please enter a budget amount');
-      return;
-    }
+const handleSave = async () => {
+  // determine final category name
+  const finalCategory = category === 'Other' ? customCategoryInput.trim() : category;
 
-    const updated = { ...budget, [category]: parseFloat(goal) };
+  if (!finalCategory) {
+    Alert.alert('Oops', 'Please select or enter a category');
+    return;
+  }
+  if (!goal) {
+    Alert.alert('Oops', 'Please enter a budget amount');
+    return;
+  }
 
-    try {
-      await AsyncStorage.setItem('user_budget', JSON.stringify(updated));
-      setBudget(updated);
-      setModalVisible(false);
-      setCategory('');
-      setGoal('');
-    } catch (err) {
-      Alert.alert('Oops', 'Something went wrong. Please try again.');
-      console.error(err);
-    }
-  };
+  // if custom category, save it to the hook
+  if (category === 'Other' && customCategoryInput.trim()) {
+    await addCustomCategory(customCategoryInput.trim());
+  }
+
+  const updated = { ...budget, [finalCategory]: parseFloat(goal) };
+
+  try {
+    await AsyncStorage.setItem('user_budget', JSON.stringify(updated));
+    setBudget(updated);
+    setModalVisible(false);
+    setCategory('');
+    setGoal('');
+    setCustomCategoryInput('');  // reset custom input too
+  } catch (err) {
+    Alert.alert('Oops', 'Something went wrong. Please try again.');
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     const loadData = async () => {
@@ -224,21 +238,58 @@ export default function GoalsScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Category picker */}
-            <Text style={styles.modalLabel}>Pick a category</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-              {Object.keys(CATEGORY_META).map(cat => (
-                <TouchableOpacity
-                  key={cat}
-                  onPress={() => setCategory(cat)}
-                  style={[styles.categoryChip, category === cat && styles.categoryChipSelected]}
-                >
-                  <Text style={[styles.categoryChipText, category === cat && { color: '#fff' }]}>
-                    {CATEGORY_META[cat].icon} {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+           {/* Category picker */}
+<Text style={styles.modalLabel}>Pick a category</Text>
+<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+  
+  {/* Default categories — but skip 'Other' for now */}
+  {Object.keys(CATEGORY_META).filter(cat => cat !== 'Other').map(cat => (
+    <TouchableOpacity
+      key={cat}
+      onPress={() => setCategory(cat)}
+      style={[styles.categoryChip, category === cat && styles.categoryChipSelected]}
+    >
+      <Text style={[styles.categoryChipText, category === cat && { color: '#fff' }]}>
+        {CATEGORY_META[cat].icon} {cat}
+      </Text>
+    </TouchableOpacity>
+  ))}
+
+  {/* Custom categories */}
+  {customCategories.map(cat => (
+    <TouchableOpacity
+      key={cat}
+      onPress={() => setCategory(cat)}
+      style={[styles.categoryChip, category === cat && styles.categoryChipSelected]}
+    >
+      <Text style={[styles.categoryChipText, category === cat && { color: '#fff' }]}>
+        ⭐ {cat}
+      </Text>
+    </TouchableOpacity>
+  ))}
+
+  {/* Other chip — always last */}
+  <TouchableOpacity
+    onPress={() => setCategory('Other')}
+    style={[styles.categoryChip, category === 'Other' && styles.categoryChipSelected]}
+  >
+    <Text style={[styles.categoryChipText, category === 'Other' && { color: '#fff' }]}>
+      💰 Other
+    </Text>
+  </TouchableOpacity>
+
+</View>
+
+{/* Show custom name input ONLY when Other is selected */}
+{category === 'Other' && (
+  <TextInput
+    style={[styles.input, { marginBottom: 12 }]}
+    placeholder="Enter custom category name"
+    placeholderTextColor="#4a5568"
+    value={customCategoryInput}
+    onChangeText={setCustomCategoryInput}
+  />
+)}
 
             {/* Amount input */}
             <Text style={styles.modalLabel}>Monthly budget</Text>
