@@ -4,6 +4,12 @@ import axios from 'axios';
 import { API_BASE } from '../../constants/api';
 import { router } from 'expo-router';
 
+// Show whole numbers as integers (333), fractions as 2 decimal places (333.67)
+// This prevents ugly floats like 333.3333333333 from showing up
+const formatAmount = (n: number): string => {
+  return Number.isInteger(n) ? n.toString() : n.toFixed(2);
+};
+
 export default function SplitsScreen() {
   const [people, setPeople] = useState([]);
 
@@ -35,7 +41,7 @@ export default function SplitsScreen() {
           <Text style={styles.name}>{person.name}</Text>
         </View>
         <Text style={[styles.amount, person.they_owe_me ? styles.green : styles.red]}>
-          ₹{person.balance}
+          ₹{formatAmount(person.balance)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -49,7 +55,7 @@ export default function SplitsScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>OWED TO ME</Text>
-          <Text style={styles.green}>₹{owedToMeTotal}</Text>
+          <Text style={styles.green}>₹{formatAmount(owedToMeTotal)}</Text>
         </View>
 
         {owedToMe.length > 0 ? (
@@ -65,7 +71,7 @@ export default function SplitsScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>I OWE</Text>
-          <Text style={styles.red}>₹{iOweTotal}</Text>
+          <Text style={styles.red}>₹{formatAmount(iOweTotal)}</Text>
         </View>
 
         {iOwe.length > 0 ? (

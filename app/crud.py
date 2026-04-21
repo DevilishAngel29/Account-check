@@ -26,7 +26,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
         if transaction.your_share:
            actual_share = transaction.your_share
         else:
-           actual_share = transaction.amount / (len(transaction.split_with) + 1)
+           actual_share = round(transaction.amount / (len(transaction.split_with) + 1),2)
         
     else:
         actual_share = transaction.amount           
@@ -49,7 +49,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
                 person_share = person.amount   # ← dot notation, not dict
                 person_name = person.name
             else:
-                person_share = transaction.amount / (len(transaction.split_with) + 1)
+                person_share = round(transaction.amount / (len(transaction.split_with) + 1),2)
                 person_name = person    
 
             split = models.Split(
