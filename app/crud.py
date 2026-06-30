@@ -163,4 +163,27 @@ def get_person_splits(db: Session, name: str):
     
     return result
 
-
+def settle_split(db: Session, split_id: int, amount: float):
+    # 1. find the split
+    split = db.query(models.Split).filter(models.Split.id == split_id).first()
+    
+    if not split:
+        return None
+    
+    # 2. add the payment
+    split.amount_paid += amount
+    
+    # 3. check if overpaid
+    if split.amount_paid > split.amount:
+        # calculate how much extra was paid
+        overpaid = split.amount_paid - split.amount
+        
+        # flip the split — now I owe them
+        split.paid_by_me = not split.paid_by_me
+        split.amount = overpaid     # new amount is the overpaid amount
+        split.amount_paid = 0  # reset paid to 0
+    
+    # 4. save
+    db.commit()
+    db.refresh(split)
+    return split

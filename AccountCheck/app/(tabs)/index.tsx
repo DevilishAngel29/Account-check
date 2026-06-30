@@ -115,7 +115,7 @@ const formatGroupDate = (dateStr) => {
       <View style={styles.stickyBar}>
   <Text style={styles.appName}>Account Check</Text>
   <Animated.Text style={[styles.miniAmount, { opacity: miniHeaderOpacity }]}>
-    ₹{summary.total_spent.toLocaleString('en-IN')}
+    ₹{(summary.total_spent - summary.total_income).toLocaleString('en-IN')}
   </Animated.Text>
 </View>
 
@@ -167,9 +167,9 @@ const formatGroupDate = (dateStr) => {
             <View style={styles.decorCircle1} />
             <View style={styles.decorCircle2} />
 
-            <Text style={styles.heroLabel}>TOTAL SPENT</Text>
+            <Text style={styles.heroLabel}>NET SPEND</Text>
             <Text style={styles.heroAmount}>
-              ₹{summary.total_spent.toLocaleString('en-IN')}
+              ₹{(summary.total_spent - summary.total_income).toLocaleString('en-IN')}
             </Text>
 
             {/* Expense | Income */}

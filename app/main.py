@@ -4,6 +4,9 @@ from typing import List
 from datetime import datetime
 from app import crud, models, schemas
 from app.database import SessionLocal, engine, get_db
+from app.routers.auth import authRouter
+from app.util.protectRoute import get_current_user
+from app.db.schema.user import UserOutput
 
 # Create database tables
 models.Base.metadata.create_all(bind=engine)
@@ -62,3 +65,25 @@ def get_summary(
     if not year:
         year = datetime.now().year
     return crud.get_summary(db, month=month, year=year)
+
+
+@app.post("/splits/{split_id}/settle")
+def settle_split(
+    split_id: int,
+    request: schemas.SettleRequest,  # ← body, not query param
+    db: Session = Depends(get_db)
+):
+    result = crud.settle_split(db, split_id=split_id, amount=request.amount)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Split not found")
+    return result
+
+# Include the authRouter in the main app
+
+app.include_router(router = authRouter,tags=["auth"],prefix = "/auth") ##tags allows to create our own section nased on the tags we provide in the router file, also prefix adds the prefix to the route so that we can have a common prefix for all the routes in the router file like /auth/login etc
+
+
+#new route to give access to authorised users only, this route will be used to test the authorization of the user and will return the user details if the user is authorized
+@app.get("/protected")
+def read_protected(user: UserOutput = Depends(get_current_user)):
+    return {"data": user}

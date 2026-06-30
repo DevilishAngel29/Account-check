@@ -35,7 +35,7 @@ class TransactionCreate(TransactionBase):
     split_with: Optional[list[Union[SplitPerson, str]]] = None
     paid_by_me: bool = True 
     your_share: Optional[float] = None
-   
+
 
 class Transaction(TransactionBase):
     id: int
@@ -44,5 +44,36 @@ class Transaction(TransactionBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+
+class SettleRequest(BaseModel):
+    amount: float
+
+
+
+# class UserCreate(BaseModel):
+#     email: str
+#     password: str  
+
+# # For returning user data (never return password!)
+# class UserOut(BaseModel):
+#     id: int
+#     email: str
+#     created_at: datetime
+
+#     class Config:
+#         from_attributes = True
+
+# # For the token response after login
+# class Token(BaseModel):
+#     access_token: str
+#     token_type: str  # always "bearer"
+
+# # What's stored INSIDE the token
+# class TokenData(BaseModel):
+#     email: Optional[str] = None
 
 
