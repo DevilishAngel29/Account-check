@@ -6,8 +6,10 @@ from typing import List, Optional
 def get_transaction(db: Session, transaction_id: int):
     return db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
 
-def get_transactions(db: Session, skip: int = 0, limit: int = 100, month: int = None, year: int = None):
-    query = db.query(models.Transaction)
+def get_transactions(db: Session, user_id: int, skip: int = 0, limit: int = 100, month: int = None, year: int = None):
+    query = db.query(models.Transaction).filter(
+        models.Transaction.user_id == user_id  
+    )
     
     if month and year:
         from sqlalchemy import extract
@@ -20,7 +22,7 @@ def get_transactions(db: Session, skip: int = 0, limit: int = 100, month: int = 
         models.Transaction.created_at.desc()
     ).offset(skip).limit(limit).all()
 
-def create_transaction(db: Session, transaction: schemas.TransactionCreate):
+def create_transaction(db: Session, transaction: schemas.TransactionCreate, user_id: int):
     
     if transaction.is_split and transaction.split_with:
         if transaction.your_share:
@@ -31,6 +33,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
     else:
         actual_share = transaction.amount           
     db_transaction = models.Transaction(
+        user_id=user_id,
         amount=transaction.amount,
         your_share=actual_share,
         description=transaction.description,
@@ -70,8 +73,10 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate):
 
 
     
-def get_people_balances(db: Session):
-    splits = db.query(models.Split).all()
+def get_people_balances(db: Session, user_id: int):
+    splits = db.query(models.Split).join(models.Transaction).filter(
+        models.Transaction.user_id == user_id
+    ).all()
     balances = {}  
     
     for split in splits:
@@ -94,8 +99,10 @@ def get_people_balances(db: Session):
     for name, balance in balances.items()
 ]
 
-def get_summary(db: Session, month: int = None, year: int = None):
-    transactions = db.query(models.Transaction)
+def get_summary(db: Session, user_id: int, month: int = None, year: int = None):
+    transactions = db.query(models.Transaction).filter(
+        models.Transaction.user_id == user_id  
+    )
     
     if month and year:
         from sqlalchemy import extract
@@ -139,9 +146,10 @@ def get_summary(db: Session, month: int = None, year: int = None):
         "spending_by_category": by_category
     }
 
-def get_person_splits(db: Session, name: str):
-    splits = db.query(models.Split).filter(
-        models.Split.split_with == name
+def get_person_splits(db: Session, name: str, user_id: int):
+    splits = db.query(models.Split).join(models.Transaction).filter(
+        models.Split.split_with == name,
+        models.Transaction.user_id == user_id  
     ).all()
     
     result = []
